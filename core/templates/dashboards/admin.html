@@ -1,0 +1,180 @@
+v{% extends "base_dashboard.html" %}
+{% block title %}Admin Global | ASECNA{% endblock %}
+{% block section_title %}Tableau de Bord Décisionnel{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- ENTÊTE AVEC TITRE DYNAMIQUE -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark mb-0">Vue d'ensemble ASECNA</h2>
+        <button class="btn btn-asecna btn-sm shadow-sm">
+            <i class="fas fa-download me-2"></i> Exporter Rapport
+        </button>
+    </div>
+
+    <!-- CARTES DE STATISTIQUES AVEC ICONES -->
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="card p-3 border-0 shadow-sm h-100" style="border-left: 5px solid #004a99 !important;">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box bg-primary bg-opacity-10 p-3 rounded-3 me-3">
+                        <i class="fas fa-wallet text-primary fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted small text-uppercase mb-1">Coût Maintenance</h6>
+                        <h4 class="fw-bold mb-0 text-dark">{{ total_cout_maint|floatformat:0 }} <small class="fs-6">FCFA</small></h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 border-0 shadow-sm h-100" style="border-left: 5px solid #dc3545 !important;">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box bg-danger bg-opacity-10 p-3 rounded-3 me-3">
+                        <i class="fas fa-exclamation-triangle text-danger fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted small text-uppercase mb-1">Total Incidents</h6>
+                        <h4 class="fw-bold mb-0 text-dark">{{ total_incidents }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 border-0 shadow-sm h-100" style="border-left: 5px solid #198754 !important;">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box bg-success bg-opacity-10 p-3 rounded-3 me-3">
+                        <i class="fas fa-broadcast-tower text-success fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted small text-uppercase mb-1">Sites Actifs</h6>
+                        <h4 class="fw-bold mb-0 text-dark">{{ total_sites }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 border-0 shadow-sm h-100" style="border-left: 5px solid #0dcaf0 !important;">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box bg-info bg-opacity-10 p-3 rounded-3 me-3">
+                        <i class="fas fa-shuttle-van text-info fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted small text-uppercase mb-1">Parc Véhicules</h6>
+                        <h4 class="fw-bold mb-0 text-dark">{{ total_vehicules }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4 g-4">
+        <!-- GRAPHIQUE AVEC STYLE MODERNE -->
+        <div class="col-lg-7">
+            <div class="card p-4 border-0 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-chart-bar me-2 text-primary"></i>Incidents par Site (Top 5)</h5>
+                    <span class="badge bg-light text-dark border">Temps réel</span>
+                </div>
+                <div style="height: 300px;">
+                    <canvas id="adminChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLEAU STYLISÉ -->
+        <div class="col-lg-5">
+            <div class="card p-4 border-0 shadow-sm h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-shopping-cart me-2 text-primary"></i>Dernières Commandes</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="border-0 rounded-start">Article</th>
+                                <th class="border-0">Site</th>
+                                <th class="border-0 rounded-end text-end">Montant</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in recent_commandes %}
+                            <tr>
+                                <td class="fw-semibold">{{ c.id_article_table_dim_article.nom_article }}</td>
+                                <td><span class="badge bg-outline-primary text-primary border border-primary-subtle">{{ c.id_site_table_dim_site.nom_site }}</span></td>
+                                <td class="text-end fw-bold text-dark">{{ c.montant_total_commande }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">Aucune commande récente.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ctx = document.getElementById('adminChart').getContext('2d');
+    
+    // Création d'un gradient pour le graphique
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, '#004a99');
+    gradient.addColorStop(1, '#00a8e8');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ sites_labels|safe }},
+            datasets: [{
+                label: 'Nombre d\'incidents',
+                data: {{ incidents_data|safe }},
+                backgroundColor: gradient,
+                borderRadius: 8,
+                borderSkipped: false,
+                barPercentage: 0.6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { display: true, drawBorder: false, color: '#f0f0f0' },
+                    ticks: { color: '#888' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#888', font: { weight: 'bold' } }
+                }
+            }
+        }
+    });
+</script>
+
+<style>
+    .icon-box {
+        width: 54px;
+        height: 54px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .table thead th {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #666;
+    }
+    .bg-outline-primary {
+        background-color: rgba(0, 74, 153, 0.05);
+    }
+</style>
+{% endblock %}

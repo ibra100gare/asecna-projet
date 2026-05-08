@@ -1,0 +1,33 @@
+{% extends "base_dashboard.html" %}
+{% block content %}
+<h2 class="mb-4">Gestion du Parc Automobile</h2>
+<div class="row">
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h5>Coût Maintenance Véhicules</h5>
+            <h2 class="text-danger">{{ cout_maint_v }} FCFA</h2>
+        </div>
+    </div>
+</div>
+<div class="card mt-4 p-4">
+    <h5>Anomalies constatées</h5>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Véhicule</th>
+                <th>Anomalie</th>
+                <th>Criticité</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in anomalies %}
+            <tr>
+                <td>{{ a.id_vehicule_table_dim_vehicule.nom_vehicule }}</td>
+                <td>{{ a.id_type_anomalie_table_dim_anomalie.description_panne }}</td>
+                <td><span class="badge bg-warning text-dark">{{ a.id_criticite_table_dim_criticite.niveau_criticite }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

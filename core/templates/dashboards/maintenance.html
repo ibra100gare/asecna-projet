@@ -1,0 +1,141 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Maintenance Systèmes{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Tableau de Bord : {{ role }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+            <i class="bi bi-printer"></i> Exporter PDF
+        </button>
+    </div>
+</div>
+
+<!-- SECTION CARTES DE STATISTIQUES (KPIs) -->
+<div class="row">
+    <!-- Carte Coût Total -->
+    <div class="col-md-4">
+        <div class="card p-3 shadow-sm border-0 border-start border-primary border-5">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded">
+                    <i class="bi bi-currency-euro text-primary fs-3"></i>
+                </div>
+                <div class="ms-3">
+                    <h6 class="text-muted mb-1 text-uppercase small font-weight-bold">Coût Maintenance Total</h6>
+                    <h3 class="mb-0 font-weight-bold">{{ cout_systemes|floatformat:2 }} <small class="fs-6">FCFA</small></h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carte Nb Interventions -->
+    <div class="col-md-4">
+        <div class="card p-3 shadow-sm border-0 border-start border-success border-5">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded">
+                    <i class="bi bi-tools text-success fs-3"></i>
+                </div>
+                <div class="ms-3">
+                    <h6 class="text-muted mb-1 text-uppercase small font-weight-bold">Interventions Réalisées</h6>
+                    <h3 class="mb-0 font-weight-bold">{{ nb_interventions }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carte Incidents Actifs -->
+    <div class="col-md-4">
+        <div class="card p-3 shadow-sm border-0 border-start border-danger border-5">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 bg-danger bg-opacity-10 p-3 rounded">
+                    <i class="bi bi-exclamation-triangle text-danger fs-3"></i>
+                </div>
+                <div class="ms-3">
+                    <h6 class="text-muted mb-1 text-uppercase small font-weight-bold">Incidents Systèmes</h6>
+                    <h3 class="mb-0 font-weight-bold">{{ nb_incidents_actifs }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- GRAPHIQUE -->
+    <div class="col-md-5">
+        <div class="card p-4 shadow-sm h-100">
+            <h5 class="card-title">Analyse par Site</h5>
+            <hr>
+            <canvas id="maintenanceChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+
+    <!-- TABLEAU RÉCAPITULATIF -->
+    <div class="col-md-7">
+        <div class="card p-4 shadow-sm h-100">
+            <h5 class="card-title">Dernières Interventions</h5>
+            <hr>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="small">SYSTÈME</th>
+                            <th class="small">SITE</th>
+                            <th class="small">TYPE</th>
+                            <th class="small">COÛT</th>
+                            <th class="small text-center">ACTION</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in maintenances %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ m.id_systeme_table_dim_systeme.nom_systeme }}</div>
+                                <small class="text-muted">{{ m.id_systeme_table_dim_systeme.type_systeme }}</small>
+                            </td>
+                            <td>{{ m.id_site_table_dim_site.nom_site }}</td>
+                            <td>
+                                <span class="badge rounded-pill {% if 'Corrective' in m.id_type_maintenance_table_dim_maintenance.libelle_maintenance %}bg-warning text-dark{% else %}bg-info{% endif %}">
+                                    {{ m.id_type_maintenance_table_dim_maintenance.libelle_maintenance }}
+                                </span>
+                            </td>
+                            <td class="fw-bold">{{ m.cout_maintenance_systeme|floatformat:0 }}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">Aucune donnée de maintenance disponible.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPT POUR LE GRAPHIQUE -->
+<script>
+    const ctx = document.getElementById('maintenanceChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Dakar', 'Abidjan', 'Bamako', 'Niamey', 'Ouaga'],
+            datasets: [{
+                data: [12, 19, 8, 15, 7], // Tu pourras dynamiser ces chiffres plus tard
+                backgroundColor: ['#004a99', '#28a745', '#ffc107', '#dc3545', '#6f42c1'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { position: 'bottom' }
+            },
+            cutout: '70%'
+        }
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base_dashboard.html" %}
+{% block content %}
+<h2 class="mb-4">Gestion Incidents ATM</h2>
+<div class="row">
+    <div class="col-md-4">
+        <div class="card p-3 bg-primary text-white">
+            <h5>Total Incidents ATM</h5>
+            <h2>{{ nb_incidents_atm }}</h2>
+        </div>
+    </div>
+</div>
+<div class="card mt-4 p-4">
+    <h5>Liste des incidents récents</h5>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Site</th>
+                <th>Type Incident</th>
+                <th>Heure Détection</th>
+                <th>Durée</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in incidents %}
+            <tr>
+                <td>{{ i.id_site_table_dim_site.nom_site }}</td>
+                <td>{{ i.id_type_incident_table_dim_type_incident_systeme.libelle_incident }}</td>
+                <td>{{ i.heure_detection }}</td>
+                <td>{{ i.duree_incident }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
