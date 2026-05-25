@@ -40,22 +40,42 @@ def dashboard_router(request):
 
     # --- 3. DASHBOARD USER3 (ATM - AIR TRAFFIC MANAGEMENT) ---
     elif role == 'USER3':
-        # Statistiques par criticité pour un graphique Camembert (Pie Chart)
+    # 1. Statistiques par criticité (Pie Chart)
         stats_crit = TableFaitIncidentAtm.objects.values(
             'id_criticite_table_dim_criticite__niveau_criticite'
         ).annotate(total=Count('id_incident_atm'))
 
+        # 2. Statistiques par Site (Bar Chart)
+        stats_site = TableFaitIncidentAtm.objects.values(
+            'id_site_table_dim_site__nom_site'
+        ).annotate(total=Count('id_incident_atm')).order_by('-total')[:5]
+
+        # 3. KPI: Calcul des incidents critiques
+        # (Ajustez le mot 'Elevé' selon ce qui est vraiment dans votre table TableDimCriticite)
+        nb_critiques = TableFaitIncidentAtm.objects.filter(
+            id_criticite_table_dim_criticite__niveau_criticite__icontains='Elevé'
+        ).count()
+
         context = {
             'role': 'Gestion ATM',
             'nb_incidents_atm': TableFaitIncidentAtm.objects.count(),
-            # Liste des incidents ATM
+            'nb_incidents_critiques': nb_critiques,
+            
+            # Récupération exhaustive avec TOUTES les jointures utiles
             'incidents': TableFaitIncidentAtm.objects.select_related(
                 'id_site_table_dim_site', 
                 'id_type_incident_table_dim_type_incident_systeme',
-                'id_criticite_table_dim_criticite'
+                'id_criticite_table_dim_criticite',
+                'id_cause_table_dim_cause_incident'
             ).all().order_by('-id_incident_atm')[:15],
-            'labels_crit': [item['id_criticite_table_dim_criticite__niveau_criticite'] for item in stats_crit],
+            
+            # Données pour le graphique Camembert (Criticité)
+            'labels_crit': [item['id_criticite_table_dim_criticite__niveau_criticite'] or 'Non défini' for item in stats_crit],
             'data_crit': [item['total'] for item in stats_crit],
+            
+            # Données pour le graphique en Barres (Sites)
+            'labels_site': [item['id_site_table_dim_site__nom_site'] for item in stats_site],
+            'data_site': [item['total'] for item in stats_site],
         }
         return render(request, 'dashboards/atm.html', context)
 
